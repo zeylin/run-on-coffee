@@ -1,20 +1,15 @@
 package com.zeylin.runoncoffee.models;
 
-import com.zeylin.runoncoffee.utils.LocalDateAttributeConverter;
+import com.zeylin.runoncoffee.models.base.BaseEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.Column;
-import javax.persistence.Convert;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import javax.persistence.Table;
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Entity
 @Table(name = "DAILY_RECORDS")
@@ -22,15 +17,10 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @ToString
-public class DailyRecord {
+public class DailyRecord extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
-
-    @Column
-    @Convert(converter = LocalDateAttributeConverter.class)
-    private LocalDate day; // record day
+    @Column(name = "day", columnDefinition = "DATE")
+    private LocalDate day;
 
     // Quantities
     private Integer grains;
