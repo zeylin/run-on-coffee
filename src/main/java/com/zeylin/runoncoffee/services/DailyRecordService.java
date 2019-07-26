@@ -71,6 +71,7 @@ public class DailyRecordService {
             DailyRecord record = convertToDailyRecord(recordDto);
             record.setId(id);
             record.setDay(dbRecord.get().getDay());
+            record.setCreatedDate(dbRecord.get().getCreatedDate());
             return convertToDisplayDto(dailyRecordRepository.save(record));
         } else {
             throw new NotFoundException();
