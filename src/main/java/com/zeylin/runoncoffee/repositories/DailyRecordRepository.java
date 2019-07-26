@@ -11,6 +11,8 @@ import java.util.UUID;
 @Repository
 public interface DailyRecordRepository extends JpaRepository<DailyRecord, UUID> {
 
-    List<DailyRecord> findByDay(LocalDate Date);
+    List<DailyRecord> findByDay(LocalDate date);
+
+    List<DailyRecord> findByDayAfterOrderByDayAsc(LocalDate date);
 
 }

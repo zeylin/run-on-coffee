@@ -113,4 +113,24 @@ public class DailyRecordController {
         return ResponseEntity.ok(recordService.incrementRecord(id, data));
     }
 
+    /**
+     * Get last week's records.
+     */
+    @GetMapping(value = "/list/week", produces = "application/json")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<List<DailyRecordDisplayDto>> getLastWeek() {
+        LOGGER.debug("get last week records");
+        return ResponseEntity.ok(recordService.getLastWeek());
+    }
+
+    /**
+     * Get last month's records.
+     */
+    @GetMapping(value = "/list/month", produces = "application/json")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<List<DailyRecordDisplayDto>> getLastMonth() {
+        LOGGER.debug("get last month records");
+        return ResponseEntity.ok(recordService.getLastMonth());
+    }
+
 }

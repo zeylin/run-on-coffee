@@ -1,5 +1,6 @@
 package com.zeylin.runoncoffee.services;
 
+import com.zeylin.runoncoffee.controllers.DailyRecordController;
 import com.zeylin.runoncoffee.dto.DailyRecordDisplayDto;
 import com.zeylin.runoncoffee.dto.DailyRecordSaveDto;
 import com.zeylin.runoncoffee.dto.DailyRecordUpdateDto;
@@ -7,6 +8,8 @@ import com.zeylin.runoncoffee.exceptions.NotFoundException;
 import com.zeylin.runoncoffee.models.DailyRecord;
 import com.zeylin.runoncoffee.repositories.DailyRecordRepository;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +24,8 @@ import java.util.stream.Collectors;
 @Service
 @Validated
 public class DailyRecordService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DailyRecordService.class);
 
     private DailyRecordRepository dailyRecordRepository;
     private ModelMapper modelMapper;
@@ -126,6 +131,24 @@ public class DailyRecordService {
         } else {
             throw new NotFoundException();
         }
+    }
+
+    public List<DailyRecordDisplayDto> getLastWeek() {
+        LocalDate weekAgo = LocalDate.now().minusDays(7);
+        return getRecordsAfterDate(weekAgo);
+    }
+
+    public List<DailyRecordDisplayDto> getLastMonth() {
+        LocalDate monthAgo = LocalDate.now().minusMonths(1);
+        return getRecordsAfterDate(monthAgo);
+    }
+
+    private List<DailyRecordDisplayDto> getRecordsAfterDate(LocalDate date) {
+        LOGGER.info("get records after {} ", date);
+        List<DailyRecord> records = dailyRecordRepository.findByDayAfterOrderByDayAsc(date);
+        return records.stream()
+                .map(record -> convertToDisplayDto(record))
+                .collect(Collectors.toList());
     }
 
     private DailyRecord convertToDailyRecord(DailyRecordSaveDto recordDto) {
