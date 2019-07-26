@@ -16,4 +16,8 @@ target/
 *.iml
 *.ipr
 
+/out/
+
+*.class
+
 *.DS_store

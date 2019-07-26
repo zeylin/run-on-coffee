@@ -2,6 +2,7 @@ package com.zeylin.runoncoffee.services;
 
 import com.zeylin.runoncoffee.dto.DailyRecordDisplayDto;
 import com.zeylin.runoncoffee.dto.DailyRecordSaveDto;
+import com.zeylin.runoncoffee.dto.DailyRecordUpdateDto;
 import com.zeylin.runoncoffee.exceptions.NotFoundException;
 import com.zeylin.runoncoffee.models.DailyRecord;
 import com.zeylin.runoncoffee.repositories.DailyRecordRepository;
@@ -82,6 +83,49 @@ public class DailyRecordService {
     public void delete(UUID id) {
         Optional<DailyRecord> dbRecord = getById(id);
         dbRecord.ifPresent(record -> dailyRecordRepository.delete(record));
+    }
+
+    @Transactional
+    public DailyRecordDisplayDto incrementRecord(UUID id, DailyRecordUpdateDto updateDto) {
+        Optional<DailyRecord> dbRecord = getById(id);
+        if(dbRecord.isPresent()) {
+            DailyRecord existingRecord = dbRecord.get();
+
+            boolean isUpdated = false;
+            if(updateDto.getGrainsVal() != null) {
+                int newGrains = existingRecord.getGrains() + updateDto.getGrainsVal();
+                if(newGrains < 0 ) newGrains = 0;
+                existingRecord.setGrains(newGrains);
+                isUpdated = true;
+            }
+            if(updateDto.getDairyVal() != null) {
+                int newDairy = existingRecord.getDairy() + updateDto.getDairyVal();
+                if(newDairy < 0 ) newDairy = 0;
+                existingRecord.setDairy(newDairy);
+                isUpdated = true;
+            }
+            if(updateDto.getVeggieVal() != null) {
+                int newVeggie = existingRecord.getVeggie() + updateDto.getVeggieVal();
+                if(newVeggie < 0 ) newVeggie = 0;
+                existingRecord.setVeggie(newVeggie);
+                isUpdated = true;
+            }
+            if(updateDto.getProteinVal() != null) {
+                int newProtein = existingRecord.getProtein() + updateDto.getProteinVal();
+                if(newProtein < 0 ) newProtein = 0;
+                existingRecord.setProtein(newProtein);
+                isUpdated = true;
+            }
+
+            if(isUpdated) {
+                return convertToDisplayDto(dailyRecordRepository.save(existingRecord));
+            } else {
+                // return existing record if nothing changed
+                return convertToDisplayDto(existingRecord);
+            }
+        } else {
+            throw new NotFoundException();
+        }
     }
 
     private DailyRecord convertToDailyRecord(DailyRecordSaveDto recordDto) {
