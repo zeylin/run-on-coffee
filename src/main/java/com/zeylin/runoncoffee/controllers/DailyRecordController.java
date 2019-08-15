@@ -1,5 +1,6 @@
 package com.zeylin.runoncoffee.controllers;
 
+import com.zeylin.runoncoffee.dto.DailyRecordAveragesDto;
 import com.zeylin.runoncoffee.dto.DailyRecordDisplayDto;
 import com.zeylin.runoncoffee.dto.DailyRecordSaveDto;
 import com.zeylin.runoncoffee.dto.DailyRecordUpdateDto;
@@ -47,7 +48,7 @@ public class DailyRecordController {
     @GetMapping(value = "/{id}", produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<DailyRecordDisplayDto> getById(@PathVariable UUID id) {
-        LOGGER.debug("get daily record with id {} ", id);
+        LOGGER.info("get daily record with id {} ", id);
         return ResponseEntity.ok(recordService.getRecord(id));
     }
 
@@ -57,7 +58,7 @@ public class DailyRecordController {
     @GetMapping(produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<DailyRecordDisplayDto>> getByDate(@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @RequestParam("date") LocalDate date) {
-        LOGGER.debug("get daily record with date {} ", date);
+        LOGGER.info("get daily record with date {} ", date);
         return ResponseEntity.ok(recordService.getRecordByDate(date));
     }
 
@@ -67,7 +68,7 @@ public class DailyRecordController {
     @GetMapping(value = "/list", produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<DailyRecordDisplayDto>> getAllRecords() {
-        LOGGER.debug("get daily records");
+        LOGGER.info("get daily records");
         List<DailyRecordDisplayDto> records = recordService.getAllRecords();
         return ResponseEntity.ok(records);
     }
@@ -78,7 +79,7 @@ public class DailyRecordController {
     @PostMapping(produces = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<DailyRecord> save(@RequestBody DailyRecordSaveDto saveDto) {
-        LOGGER.debug("create daily record {} ", saveDto);
+        LOGGER.info("create daily record {} ", saveDto);
         return ResponseEntity.ok(recordService.save(saveDto));
     }
 
@@ -88,7 +89,7 @@ public class DailyRecordController {
     @PutMapping(value = "/{id}", produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<DailyRecordDisplayDto> update(@PathVariable UUID id, @RequestBody DailyRecordSaveDto record) {
-        LOGGER.debug("update record with id {} ", id);
+        LOGGER.info("update record with id {} ", id);
         return ResponseEntity.ok(recordService.update(id, record));
     }
 
@@ -98,7 +99,7 @@ public class DailyRecordController {
     @DeleteMapping(value = "/{id}", produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
     public void delete(@PathVariable UUID id) {
-        LOGGER.debug("delete record with id {} ", id);
+        LOGGER.info("delete record with id {} ", id);
         recordService.delete(id);
     }
 
@@ -119,8 +120,18 @@ public class DailyRecordController {
     @GetMapping(value = "/list/week", produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<DailyRecordDisplayDto>> getLastWeek() {
-        LOGGER.debug("get last week records");
+        LOGGER.info("get last week records");
         return ResponseEntity.ok(recordService.getLastWeek());
+    }
+
+    /**
+     * Get last week averages.
+     */
+    @GetMapping(value = "/list/week/avg", produces = "application/json")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<DailyRecordAveragesDto> getLastWeekAverage() {
+        LOGGER.info("get last week averages");
+        return ResponseEntity.ok(recordService.getLastWeekAverage());
     }
 
     /**
@@ -129,8 +140,18 @@ public class DailyRecordController {
     @GetMapping(value = "/list/month", produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<DailyRecordDisplayDto>> getLastMonth() {
-        LOGGER.debug("get last month records");
+        LOGGER.info("get last month records");
         return ResponseEntity.ok(recordService.getLastMonth());
     }
+
+//    /**
+//     * Get last month averages.
+//     */
+//    @GetMapping(value = "/list/month/avg", produces = "application/json")
+//    @ResponseStatus(HttpStatus.OK)
+//    public ResponseEntity<List<DailyRecordDisplayDto>> getLastMonthAverage() {
+//        LOGGER.info("get last month averages");
+//        return ResponseEntity.ok(recordService.getLastMonthAverage());
+//    }
 
 }

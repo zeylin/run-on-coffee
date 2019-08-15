@@ -1,6 +1,6 @@
 package com.zeylin.runoncoffee.services;
 
-import com.zeylin.runoncoffee.controllers.DailyRecordController;
+import com.zeylin.runoncoffee.dto.DailyRecordAveragesDto;
 import com.zeylin.runoncoffee.dto.DailyRecordDisplayDto;
 import com.zeylin.runoncoffee.dto.DailyRecordSaveDto;
 import com.zeylin.runoncoffee.dto.DailyRecordUpdateDto;
@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,8 @@ import java.util.stream.Collectors;
 public class DailyRecordService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyRecordService.class);
+    private static final int SEVEN = 7;
+    private static DecimalFormat decimalFormat = new DecimalFormat("#.##");
 
     private DailyRecordRepository dailyRecordRepository;
     private ModelMapper modelMapper;
@@ -142,6 +145,32 @@ public class DailyRecordService {
         LocalDate monthAgo = LocalDate.now().minusMonths(1);
         return getRecordsAfterDate(monthAgo);
     }
+
+    public DailyRecordAveragesDto getLastWeekAverage() {
+        LocalDate weekAgo = LocalDate.now().minusDays(7);
+        List<DailyRecord> records = dailyRecordRepository.findByDayAfterOrderByDayAsc(weekAgo);
+
+        double grainsSum = 0;
+        for(DailyRecord record : records) {
+            grainsSum = grainsSum + record.getGrains();
+        }
+
+        double grainsAverage = grainsSum / SEVEN;
+        System.out.println("grainsAverage " + grainsAverage);
+
+        DailyRecordAveragesDto averages = new DailyRecordAveragesDto();
+        averages.setGrainsAverage(grainsAverage);
+
+        // todo builder
+
+        return averages;
+
+    }
+
+//    public List<DailyRecordDisplayDto> getLastMonthAverage() {
+//        LocalDate monthAgo = LocalDate.now().minusMonths(1);
+//        return getRecordsAfterDate(monthAgo);
+//    }
 
     private List<DailyRecordDisplayDto> getRecordsAfterDate(LocalDate date) {
         LOGGER.info("get records after {} ", date);
