@@ -29,6 +29,7 @@ public class DailyRecordService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyRecordService.class);
 
     private static final int SEVEN_DAYS = 7;
+    private static final int THIRTY_DAYS = 30;
     private static DecimalFormat twoDecimalPointsFormat = new DecimalFormat("#.##");
 
     private DailyRecordRepository dailyRecordRepository;
@@ -162,6 +163,9 @@ public class DailyRecordService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Get last week's averages (past 7 days).
+     */
     public DailyRecordAveragesDto getLastWeekAverage() {
         LocalDate weekAgo = LocalDate.now().minusDays(7);
         List<DailyRecord> records = dailyRecordRepository.findByDayAfterOrderByDayAsc(weekAgo);
@@ -175,10 +179,10 @@ public class DailyRecordService {
                     .build();
         }
 
-        double grainsAverage = getAverage(records, FoodGroup.GRAINS);
-        double veggieAverage = getAverage(records, FoodGroup.VEGGIE);
-        double dairyAverage = getAverage(records, FoodGroup.DAIRY);
-        double proteinAverage = getAverage(records, FoodGroup.PROTEIN);
+        double grainsAverage = getWeeklyAverage(records, FoodGroup.GRAINS);
+        double veggieAverage = getWeeklyAverage(records, FoodGroup.VEGGIE);
+        double dairyAverage = getWeeklyAverage(records, FoodGroup.DAIRY);
+        double proteinAverage = getWeeklyAverage(records, FoodGroup.PROTEIN);
 
         return DailyRecordAveragesDto.builder()
                 .grainsAverage(grainsAverage)
@@ -189,7 +193,7 @@ public class DailyRecordService {
 
     }
 
-    private double getAverage(List<DailyRecord> records, FoodGroup foodGroup) {
+    private double getWeeklyAverage(List<DailyRecord> records, FoodGroup foodGroup) {
         double sum = 0;
         for(DailyRecord record : records) {
             switch(foodGroup) {
@@ -211,10 +215,56 @@ public class DailyRecordService {
         return Double.valueOf(twoDecimalPointsFormat.format(avg));
     }
 
-//    public List<DailyRecordDisplayDto> getLastMonthAverage() {
-//        LocalDate monthAgo = LocalDate.now().minusMonths(1);
-//        return getRecordsAfterDate(monthAgo);
-//    }
+    /**
+     * Get last month's averages (past 30 days).
+     */
+    public DailyRecordAveragesDto getLastMonthAverage() {
+        LocalDate monthAgo = LocalDate.now().minusMonths(1);
+        List<DailyRecord> records = dailyRecordRepository.findByDayAfterOrderByDayAsc(monthAgo);
+
+        if(records.isEmpty()) {
+            return DailyRecordAveragesDto.builder()
+                    .grainsAverage(0)
+                    .veggieAverage(0)
+                    .dairyAverage(0)
+                    .proteinAverage(0)
+                    .build();
+        }
+
+        double grainsAverage = getMonthlyAverage(records, FoodGroup.GRAINS);
+        double veggieAverage = getMonthlyAverage(records, FoodGroup.VEGGIE);
+        double dairyAverage = getMonthlyAverage(records, FoodGroup.DAIRY);
+        double proteinAverage = getMonthlyAverage(records, FoodGroup.PROTEIN);
+
+        return DailyRecordAveragesDto.builder()
+                .grainsAverage(grainsAverage)
+                .veggieAverage(veggieAverage)
+                .dairyAverage(dairyAverage)
+                .proteinAverage(proteinAverage)
+                .build();
+    }
+
+    private double getMonthlyAverage(List<DailyRecord> records, FoodGroup foodGroup) {
+        double sum = 0;
+        for(DailyRecord record : records) {
+            switch(foodGroup) {
+                case GRAINS:
+                    sum = sum + record.getGrains();
+                    break;
+                case VEGGIE:
+                    sum = sum + record.getVeggie();
+                    break;
+                case DAIRY:
+                    sum = sum + record.getDairy();
+                    break;
+                case PROTEIN:
+                    sum = sum + record.getProtein();
+                    break;
+            }
+        }
+        double avg = sum / THIRTY_DAYS;
+        return Double.valueOf(twoDecimalPointsFormat.format(avg));
+    }
 
     private DailyRecord convertToDailyRecord(DailyRecordSaveDto recordDto) {
         return modelMapper.map(recordDto, DailyRecord.class);

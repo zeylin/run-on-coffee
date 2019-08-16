@@ -144,14 +144,14 @@ public class DailyRecordController {
         return ResponseEntity.ok(recordService.getLastMonth());
     }
 
-//    /**
-//     * Get last month averages.
-//     */
-//    @GetMapping(value = "/list/month/avg", produces = "application/json")
-//    @ResponseStatus(HttpStatus.OK)
-//    public ResponseEntity<List<DailyRecordDisplayDto>> getLastMonthAverage() {
-//        LOGGER.info("get last month averages");
-//        return ResponseEntity.ok(recordService.getLastMonthAverage());
-//    }
+    /**
+     * Get last month averages.
+     */
+    @GetMapping(value = "/list/month/avg", produces = "application/json")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<DailyRecordAveragesDto> getLastMonthAverage() {
+        LOGGER.info("get last month averages");
+        return ResponseEntity.ok(recordService.getLastMonthAverage());
+    }
 
 }
