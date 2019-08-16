@@ -1,5 +1,6 @@
 package com.zeylin.runoncoffee.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,9 +9,10 @@ import lombok.ToString;
 
 @Getter
 @Setter
-@NoArgsConstructor
-@ToString
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
 public class DailyRecordAveragesDto {
 
     private double grainsAverage;

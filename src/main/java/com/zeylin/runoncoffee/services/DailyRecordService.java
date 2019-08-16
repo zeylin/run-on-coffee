@@ -27,11 +27,19 @@ import java.util.stream.Collectors;
 public class DailyRecordService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyRecordService.class);
-    private static final int SEVEN = 7;
-    private static DecimalFormat decimalFormat = new DecimalFormat("#.##");
+
+    private static final int SEVEN_DAYS = 7;
+    private static DecimalFormat twoDecimalPointsFormat = new DecimalFormat("#.##");
 
     private DailyRecordRepository dailyRecordRepository;
     private ModelMapper modelMapper;
+
+    public enum FoodGroup {
+        GRAINS,
+        VEGGIE,
+        DAIRY,
+        PROTEIN
+    }
 
     @Autowired
     public DailyRecordService(DailyRecordRepository dailyRecordRepository,
@@ -146,32 +154,6 @@ public class DailyRecordService {
         return getRecordsAfterDate(monthAgo);
     }
 
-    public DailyRecordAveragesDto getLastWeekAverage() {
-        LocalDate weekAgo = LocalDate.now().minusDays(7);
-        List<DailyRecord> records = dailyRecordRepository.findByDayAfterOrderByDayAsc(weekAgo);
-
-        double grainsSum = 0;
-        for(DailyRecord record : records) {
-            grainsSum = grainsSum + record.getGrains();
-        }
-
-        double grainsAverage = grainsSum / SEVEN;
-        System.out.println("grainsAverage " + grainsAverage);
-
-        DailyRecordAveragesDto averages = new DailyRecordAveragesDto();
-        averages.setGrainsAverage(grainsAverage);
-
-        // todo builder
-
-        return averages;
-
-    }
-
-//    public List<DailyRecordDisplayDto> getLastMonthAverage() {
-//        LocalDate monthAgo = LocalDate.now().minusMonths(1);
-//        return getRecordsAfterDate(monthAgo);
-//    }
-
     private List<DailyRecordDisplayDto> getRecordsAfterDate(LocalDate date) {
         LOGGER.info("get records after {} ", date);
         List<DailyRecord> records = dailyRecordRepository.findByDayAfterOrderByDayAsc(date);
@@ -179,6 +161,60 @@ public class DailyRecordService {
                 .map(record -> convertToDisplayDto(record))
                 .collect(Collectors.toList());
     }
+
+    public DailyRecordAveragesDto getLastWeekAverage() {
+        LocalDate weekAgo = LocalDate.now().minusDays(7);
+        List<DailyRecord> records = dailyRecordRepository.findByDayAfterOrderByDayAsc(weekAgo);
+
+        if(records.isEmpty()) {
+            return DailyRecordAveragesDto.builder()
+                    .grainsAverage(0)
+                    .veggieAverage(0)
+                    .dairyAverage(0)
+                    .proteinAverage(0)
+                    .build();
+        }
+
+        double grainsAverage = getAverage(records, FoodGroup.GRAINS);
+        double veggieAverage = getAverage(records, FoodGroup.VEGGIE);
+        double dairyAverage = getAverage(records, FoodGroup.DAIRY);
+        double proteinAverage = getAverage(records, FoodGroup.PROTEIN);
+
+        return DailyRecordAveragesDto.builder()
+                .grainsAverage(grainsAverage)
+                .veggieAverage(veggieAverage)
+                .dairyAverage(dairyAverage)
+                .proteinAverage(proteinAverage)
+                .build();
+
+    }
+
+    private double getAverage(List<DailyRecord> records, FoodGroup foodGroup) {
+        double sum = 0;
+        for(DailyRecord record : records) {
+            switch(foodGroup) {
+                case GRAINS:
+                    sum = sum + record.getGrains();
+                    break;
+                case VEGGIE:
+                    sum = sum + record.getVeggie();
+                    break;
+                case DAIRY:
+                    sum = sum + record.getDairy();
+                    break;
+                case PROTEIN:
+                    sum = sum + record.getProtein();
+                    break;
+            }
+        }
+        double avg = sum / SEVEN_DAYS;
+        return Double.valueOf(twoDecimalPointsFormat.format(avg));
+    }
+
+//    public List<DailyRecordDisplayDto> getLastMonthAverage() {
+//        LocalDate monthAgo = LocalDate.now().minusMonths(1);
+//        return getRecordsAfterDate(monthAgo);
+//    }
 
     private DailyRecord convertToDailyRecord(DailyRecordSaveDto recordDto) {
         return modelMapper.map(recordDto, DailyRecord.class);
