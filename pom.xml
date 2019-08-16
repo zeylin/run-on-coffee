@@ -62,6 +62,10 @@
 			<scope>test</scope>
 		</dependency>
 		<!--test end : branch par -->
+
+		<!-- comments : branch child -->
+		<!-- more comments : branch child -->
+
 	</dependencies>
 
 	<build>
