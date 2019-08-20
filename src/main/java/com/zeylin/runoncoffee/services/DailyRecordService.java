@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.util.List;
@@ -212,6 +213,7 @@ public class DailyRecordService {
             }
         }
         double avg = sum / SEVEN_DAYS;
+        twoDecimalPointsFormat.setRoundingMode(RoundingMode.HALF_EVEN);
         return Double.valueOf(twoDecimalPointsFormat.format(avg));
     }
 
@@ -263,6 +265,7 @@ public class DailyRecordService {
             }
         }
         double avg = sum / THIRTY_DAYS;
+        twoDecimalPointsFormat.setRoundingMode(RoundingMode.HALF_EVEN);
         return Double.valueOf(twoDecimalPointsFormat.format(avg));
     }
 
