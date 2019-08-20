@@ -168,63 +168,26 @@ public class DailyRecordService {
      * Get last week's averages (past 7 days).
      */
     public DailyRecordAveragesDto getLastWeekAverage() {
-        LocalDate weekAgo = LocalDate.now().minusDays(7);
-        List<DailyRecord> records = dailyRecordRepository.findByDayAfterOrderByDayAsc(weekAgo);
-
-        if(records.isEmpty()) {
-            return DailyRecordAveragesDto.builder()
-                    .grainsAverage(0)
-                    .veggieAverage(0)
-                    .dairyAverage(0)
-                    .proteinAverage(0)
-                    .build();
-        }
-
-        double grainsAverage = getWeeklyAverage(records, FoodGroup.GRAINS);
-        double veggieAverage = getWeeklyAverage(records, FoodGroup.VEGGIE);
-        double dairyAverage = getWeeklyAverage(records, FoodGroup.DAIRY);
-        double proteinAverage = getWeeklyAverage(records, FoodGroup.PROTEIN);
-
-        return DailyRecordAveragesDto.builder()
-                .grainsAverage(grainsAverage)
-                .veggieAverage(veggieAverage)
-                .dairyAverage(dairyAverage)
-                .proteinAverage(proteinAverage)
-                .build();
-
-    }
-
-    private double getWeeklyAverage(List<DailyRecord> records, FoodGroup foodGroup) {
-        double sum = 0;
-        for(DailyRecord record : records) {
-            switch(foodGroup) {
-                case GRAINS:
-                    sum = sum + record.getGrains();
-                    break;
-                case VEGGIE:
-                    sum = sum + record.getVeggie();
-                    break;
-                case DAIRY:
-                    sum = sum + record.getDairy();
-                    break;
-                case PROTEIN:
-                    sum = sum + record.getProtein();
-                    break;
-            }
-        }
-        double avg = sum / SEVEN_DAYS;
-        twoDecimalPointsFormat.setRoundingMode(RoundingMode.HALF_EVEN);
-        return Double.valueOf(twoDecimalPointsFormat.format(avg));
+        return getAveragesStartingFromDateOverTime(LocalDate.now().minusDays(7), SEVEN_DAYS);
     }
 
     /**
      * Get last month's averages (past 30 days).
      */
     public DailyRecordAveragesDto getLastMonthAverage() {
-        LocalDate monthAgo = LocalDate.now().minusMonths(1);
-        List<DailyRecord> records = dailyRecordRepository.findByDayAfterOrderByDayAsc(monthAgo);
+        return getAveragesStartingFromDateOverTime(LocalDate.now().minusMonths(1), THIRTY_DAYS);
+    }
 
-        if(records.isEmpty()) {
+    /**
+     * Compute averages starting from the given date, over the given number of days.
+     * @param date date to start computing the averages from
+     * @param numberOfDays number of days to compute the averages for
+     * @return averages for each food group
+     */
+    private DailyRecordAveragesDto getAveragesStartingFromDateOverTime(LocalDate date, int numberOfDays) {
+        List<DailyRecord> records = dailyRecordRepository.findByDayAfterOrderByDayAsc(date);
+
+        if (records.isEmpty()) {
             return DailyRecordAveragesDto.builder()
                     .grainsAverage(0)
                     .veggieAverage(0)
@@ -233,10 +196,20 @@ public class DailyRecordService {
                     .build();
         }
 
-        double grainsAverage = getMonthlyAverage(records, FoodGroup.GRAINS);
-        double veggieAverage = getMonthlyAverage(records, FoodGroup.VEGGIE);
-        double dairyAverage = getMonthlyAverage(records, FoodGroup.DAIRY);
-        double proteinAverage = getMonthlyAverage(records, FoodGroup.PROTEIN);
+        return computeAveragesOverTime(records, numberOfDays);
+    }
+
+    /**
+     * Compute averages for each food group over the given time.
+     * @param records list of daily records to analyze
+     * @param numberOfDays number of days to compute averages for
+     * @return averages for each of the food groups
+     */
+    private DailyRecordAveragesDto computeAveragesOverTime(List<DailyRecord> records, int numberOfDays) {
+        double grainsAverage = getAverageForFoodGroupOverTime(records, FoodGroup.GRAINS, numberOfDays);
+        double veggieAverage = getAverageForFoodGroupOverTime(records, FoodGroup.VEGGIE, numberOfDays);
+        double dairyAverage = getAverageForFoodGroupOverTime(records, FoodGroup.DAIRY, numberOfDays);
+        double proteinAverage = getAverageForFoodGroupOverTime(records, FoodGroup.PROTEIN, numberOfDays);
 
         return DailyRecordAveragesDto.builder()
                 .grainsAverage(grainsAverage)
@@ -246,7 +219,14 @@ public class DailyRecordService {
                 .build();
     }
 
-    private double getMonthlyAverage(List<DailyRecord> records, FoodGroup foodGroup) {
+    /**
+     * Compute average for a given food group over a given time.
+     * @param records list of daily records
+     * @param foodGroup name of the food group
+     * @param numberOfDays number of days to calculate the average over
+     * @return average value for this food group over the given time
+     */
+    private double getAverageForFoodGroupOverTime(List<DailyRecord> records, FoodGroup foodGroup, int numberOfDays) {
         double sum = 0;
         for(DailyRecord record : records) {
             switch(foodGroup) {
@@ -264,7 +244,7 @@ public class DailyRecordService {
                     break;
             }
         }
-        double avg = sum / THIRTY_DAYS;
+        double avg = sum / numberOfDays;
         twoDecimalPointsFormat.setRoundingMode(RoundingMode.HALF_EVEN);
         return Double.valueOf(twoDecimalPointsFormat.format(avg));
     }
