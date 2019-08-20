@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    initialization-mode: never
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:nutridata;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+
+hibernate:
+  dialect: org.hibernate.dialect.H2Dialect
+  show_sql: true
+  hbm2ddl:
+    auto: create-drop
