@@ -3,6 +3,7 @@ package com.zeylin.runoncoffee.controllers;
 import com.zeylin.runoncoffee.dto.DailyRecordAveragesDto;
 import com.zeylin.runoncoffee.dto.DailyRecordDisplayDto;
 import com.zeylin.runoncoffee.dto.DailyRecordSaveDto;
+import com.zeylin.runoncoffee.dto.DailyRecordStatsDto;
 import com.zeylin.runoncoffee.dto.DailyRecordUpdateDto;
 import com.zeylin.runoncoffee.models.DailyRecord;
 import com.zeylin.runoncoffee.services.DailyRecordService;
@@ -57,7 +58,7 @@ public class DailyRecordController {
      */
     @GetMapping(produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<List<DailyRecordDisplayDto>> getByDate(@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @RequestParam("date") LocalDate date) {
+    public ResponseEntity<DailyRecordDisplayDto> getByDate(@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @RequestParam("date") LocalDate date) {
         LOGGER.info("get daily record with date {} ", date);
         return ResponseEntity.ok(recordService.getRecordByDate(date));
     }
@@ -152,6 +153,37 @@ public class DailyRecordController {
     public ResponseEntity<DailyRecordAveragesDto> getLastMonthAverage() {
         LOGGER.info("get last month averages");
         return ResponseEntity.ok(recordService.getLastMonthAverage());
+    }
+
+    /**
+     * Get stats for a given day.
+     */
+    @GetMapping(value = "/stats/day", produces = "application/json")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<DailyRecordStatsDto> getPercentageStatsDaily(@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @RequestParam("date") LocalDate date,
+                                                                       Long guideId) {
+        LOGGER.info("get stats for date, guide {}, {}", date, guideId);
+        return ResponseEntity.ok(recordService.getDailyStats(date, guideId));
+    }
+
+    /**
+     * Get stats for the past week.
+     */
+    @GetMapping(value = "/stats/week", produces = "application/json")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<DailyRecordStatsDto> getPercentageStatsWeekly(Long guideId) {
+        LOGGER.info("get stats for last week with guide id {}", guideId);
+        return ResponseEntity.ok(recordService.getWeeklyStats(guideId));
+    }
+
+    /**
+     * Get stats for the past month.
+     */
+    @GetMapping(value = "/stats/month", produces = "application/json")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<DailyRecordStatsDto> getPercentageStatsMonthly(Long guideId) {
+        LOGGER.info("get stats for last month with guide id {}", guideId);
+        return ResponseEntity.ok(recordService.getMonthlyStats(guideId));
     }
 
 }

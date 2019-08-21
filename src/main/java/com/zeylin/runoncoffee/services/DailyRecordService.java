@@ -3,10 +3,13 @@ package com.zeylin.runoncoffee.services;
 import com.zeylin.runoncoffee.dto.DailyRecordAveragesDto;
 import com.zeylin.runoncoffee.dto.DailyRecordDisplayDto;
 import com.zeylin.runoncoffee.dto.DailyRecordSaveDto;
+import com.zeylin.runoncoffee.dto.DailyRecordStatsDto;
 import com.zeylin.runoncoffee.dto.DailyRecordUpdateDto;
 import com.zeylin.runoncoffee.exceptions.NotFoundException;
 import com.zeylin.runoncoffee.models.DailyRecord;
+import com.zeylin.runoncoffee.models.dictionary.FoodGuide;
 import com.zeylin.runoncoffee.repositories.DailyRecordRepository;
+import com.zeylin.runoncoffee.services.dictionary.FoodGuideService;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,9 +34,13 @@ public class DailyRecordService {
 
     private static final int SEVEN_DAYS = 7;
     private static final int THIRTY_DAYS = 30;
+    private static final int SEVEN_DAYS_AGO = 7;
+    private static final int MONTH_AGO = 1;
     private static DecimalFormat twoDecimalPointsFormat = new DecimalFormat("#.##");
+    private static DecimalFormat noDecimalPointFormat = new DecimalFormat("#");
 
     private DailyRecordRepository dailyRecordRepository;
+    private FoodGuideService foodGuideService;
     private ModelMapper modelMapper;
 
     public enum FoodGroup {
@@ -45,8 +52,10 @@ public class DailyRecordService {
 
     @Autowired
     public DailyRecordService(DailyRecordRepository dailyRecordRepository,
+                              FoodGuideService foodGuideService,
                               ModelMapper modelMapper) {
         this.dailyRecordRepository = dailyRecordRepository;
+        this.foodGuideService = foodGuideService;
         this.modelMapper = modelMapper;
     }
 
@@ -64,11 +73,11 @@ public class DailyRecordService {
                 .orElseThrow(NotFoundException::new);
     }
 
-    public List<DailyRecordDisplayDto> getRecordByDate(LocalDate date) {
-        List<DailyRecord> records = dailyRecordRepository.findByDay(date);
-        return records.stream()
-                .map(record -> convertToDisplayDto(record))
-                .collect(Collectors.toList());
+    public DailyRecordDisplayDto getRecordByDate(LocalDate date) {
+        Optional<DailyRecord> record = dailyRecordRepository.findByDay(date);
+        return record
+                .map(t -> convertToDisplayDto(record.get()))
+                .orElseGet(DailyRecordDisplayDto::new);
     }
 
     private Optional<DailyRecord> getById(UUID id) {
@@ -147,12 +156,12 @@ public class DailyRecordService {
     }
 
     public List<DailyRecordDisplayDto> getLastWeek() {
-        LocalDate weekAgo = LocalDate.now().minusDays(7);
+        LocalDate weekAgo = LocalDate.now().minusDays(SEVEN_DAYS_AGO);
         return getRecordsAfterDate(weekAgo);
     }
 
     public List<DailyRecordDisplayDto> getLastMonth() {
-        LocalDate monthAgo = LocalDate.now().minusMonths(1);
+        LocalDate monthAgo = LocalDate.now().minusMonths(MONTH_AGO);
         return getRecordsAfterDate(monthAgo);
     }
 
@@ -168,14 +177,14 @@ public class DailyRecordService {
      * Get last week's averages (past 7 days).
      */
     public DailyRecordAveragesDto getLastWeekAverage() {
-        return getAveragesStartingFromDateOverTime(LocalDate.now().minusDays(7), SEVEN_DAYS);
+        return getAveragesStartingFromDateOverTime(LocalDate.now().minusDays(SEVEN_DAYS_AGO), SEVEN_DAYS);
     }
 
     /**
      * Get last month's averages (past 30 days).
      */
     public DailyRecordAveragesDto getLastMonthAverage() {
-        return getAveragesStartingFromDateOverTime(LocalDate.now().minusMonths(1), THIRTY_DAYS);
+        return getAveragesStartingFromDateOverTime(LocalDate.now().minusMonths(MONTH_AGO), THIRTY_DAYS);
     }
 
     /**
@@ -245,8 +254,97 @@ public class DailyRecordService {
             }
         }
         double avg = sum / numberOfDays;
-        twoDecimalPointsFormat.setRoundingMode(RoundingMode.HALF_EVEN);
+        twoDecimalPointsFormat.setRoundingMode(RoundingMode.HALF_UP);
         return Double.valueOf(twoDecimalPointsFormat.format(avg));
+    }
+
+    /**
+     * Get statistics on percentages of recommended daily guides for a given day.
+     * @param date date to analyze
+     * @param guideId food guide id
+     * @return stats on that day, if present
+     */
+    public DailyRecordStatsDto getDailyStats(LocalDate date, Long guideId) {
+        Optional<DailyRecord> dbRecord = dailyRecordRepository.findByDay(date);
+        if(dbRecord.isPresent()) {
+            DailyRecord record = dbRecord.get();
+
+            Optional<FoodGuide> dbFoodGuide = foodGuideService.getById(guideId);
+            FoodGuide foodGuide =  dbFoodGuide
+                    .map(t -> dbFoodGuide.get())
+                    .orElseGet(FoodGuide::getDefault);
+
+            double grainsPercent = (double) record.getGrains() / foodGuide.getGrains() * 100;
+            double veggiePercent = (double) record.getVeggie() / foodGuide.getVeggie() * 100;
+            double dairyPercent = (double) record.getDairy() / foodGuide.getDairy() * 100;
+            double proteinPercent = (double) record.getProtein() / foodGuide.getProtein() * 100;
+
+            noDecimalPointFormat.setRoundingMode(RoundingMode.HALF_UP);
+            return DailyRecordStatsDto.builder()
+                    .grainsRec(Integer.valueOf(noDecimalPointFormat.format(grainsPercent)))
+                    .veggieRec(Integer.valueOf(noDecimalPointFormat.format(veggiePercent)))
+                    .dairyRec(Integer.valueOf(noDecimalPointFormat.format(dairyPercent)))
+                    .proteinRec(Integer.valueOf(noDecimalPointFormat.format(proteinPercent)))
+                    .build();
+        }
+        return new DailyRecordStatsDto();
+    }
+
+    /**
+     * Get stats on recommended daily guides percentages for the last week.
+     */
+    public DailyRecordStatsDto getWeeklyStats(Long guideId) {
+        LocalDate weekAgo = LocalDate.now().minusDays(SEVEN_DAYS_AGO);
+        return getStatsStartingFromForGuide(weekAgo, guideId);
+    }
+
+    /**
+     * Get stats on recommended daily guides percentages for the last month.
+     */
+    public DailyRecordStatsDto getMonthlyStats(Long guideId) {
+        LocalDate monthAgo = LocalDate.now().minusMonths(MONTH_AGO);
+        return getStatsStartingFromForGuide(monthAgo, guideId);
+    }
+
+    /**
+     * Get stats (recommended daily guides percentages) starting from a given date, for a given food guide.
+     * @param date date to start analysing data from
+     * @param guideId id of the food guide to follow
+     * @return percentages of recommended daily nutrition guides
+     */
+    private DailyRecordStatsDto getStatsStartingFromForGuide(LocalDate date, Long guideId) {
+        List<DailyRecord> records = dailyRecordRepository.findByDayAfterOrderByDayAsc(date);
+        if (records.isEmpty()) {
+            return DailyRecordStatsDto.builder()
+                    .grainsRec(0)
+                    .veggieRec(0)
+                    .dairyRec(0)
+                    .proteinRec(0)
+                    .build();
+        }
+
+        double grainsAverage = getAverageForFoodGroupOverTime(records, FoodGroup.GRAINS, SEVEN_DAYS);
+        double veggieAverage = getAverageForFoodGroupOverTime(records, FoodGroup.VEGGIE, SEVEN_DAYS);
+        double dairyAverage = getAverageForFoodGroupOverTime(records, FoodGroup.DAIRY, SEVEN_DAYS);
+        double proteinAverage = getAverageForFoodGroupOverTime(records, FoodGroup.PROTEIN, SEVEN_DAYS);
+
+        Optional<FoodGuide> dbFoodGuide = foodGuideService.getById(guideId);
+        FoodGuide foodGuide =  dbFoodGuide
+                .map(t -> dbFoodGuide.get())
+                .orElseGet(FoodGuide::getDefault);
+
+        double grainsPercent = grainsAverage / foodGuide.getGrains() * 100;
+        double veggiePercent = veggieAverage / foodGuide.getVeggie() * 100;
+        double dairyPercent = dairyAverage / foodGuide.getDairy() * 100;
+        double proteinPercent = proteinAverage / foodGuide.getProtein() * 100;
+
+        noDecimalPointFormat.setRoundingMode(RoundingMode.HALF_UP);
+        return DailyRecordStatsDto.builder()
+                .grainsRec(Integer.valueOf(noDecimalPointFormat.format(grainsPercent)))
+                .veggieRec(Integer.valueOf(noDecimalPointFormat.format(veggiePercent)))
+                .dairyRec(Integer.valueOf(noDecimalPointFormat.format(dairyPercent)))
+                .proteinRec(Integer.valueOf(noDecimalPointFormat.format(proteinPercent)))
+                .build();
     }
 
     private DailyRecord convertToDailyRecord(DailyRecordSaveDto recordDto) {

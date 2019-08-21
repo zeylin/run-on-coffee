@@ -3,6 +3,7 @@ package com.zeylin.runoncoffee.services;
 import com.zeylin.runoncoffee.dto.DailyRecordAveragesDto;
 import com.zeylin.runoncoffee.dto.DailyRecordDisplayDto;
 import com.zeylin.runoncoffee.dto.DailyRecordSaveDto;
+import com.zeylin.runoncoffee.dto.DailyRecordStatsDto;
 import com.zeylin.runoncoffee.exceptions.NotFoundException;
 import com.zeylin.runoncoffee.models.DailyRecord;
 import com.zeylin.runoncoffee.repositories.DailyRecordRepository;
@@ -22,6 +23,10 @@ import static org.junit.Assert.assertEquals;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class DailyRecordServiceTest {
+
+    private static final long GUIDE_ONE = 1L;
+    private static final long GUIDE_FIVE = 5L;
+    private static final long GUIDE_THREE = 3L;
 
     @Autowired
     DailyRecordService dailyRecordService;
@@ -140,6 +145,63 @@ public class DailyRecordServiceTest {
         assertEquals(expectedVeggie, response.getVeggieAverage(), 0.005);
         assertEquals(expectedDairy, response.getDairyAverage(), 0.005);
         assertEquals(expectedProtein, response.getProteinAverage(), 0.005);
+    }
+
+    @Test
+    public void checkDailyStatsTest() {
+        // given
+        addTodaysRecord(6,5,2,3);
+        LocalDate today = LocalDate.now();
+
+        // when
+        DailyRecordStatsDto response = dailyRecordService.getDailyStats(today, GUIDE_ONE);
+
+        // then
+        assertEquals(86, response.getGrainsRec());
+        assertEquals(83, response.getVeggieRec());
+        assertEquals(100, response.getDairyRec());
+        assertEquals(150, response.getProteinRec());
+    }
+
+    @Test
+    public void checkWeeklyStatsTest() {
+        // given
+        addTodaysRecord(6,7,4,3);
+        addRecord(5,4,3,2,2);
+        addRecord(4,6,2,2,4);
+
+        // when
+        DailyRecordStatsDto response = dailyRecordService.getWeeklyStats(GUIDE_FIVE);
+
+        // then
+        assertEquals(27, response.getGrainsRec());
+        assertEquals(35, response.getVeggieRec());
+        assertEquals(65, response.getDairyRec());
+        assertEquals(50, response.getProteinRec());
+    }
+
+    @Test
+    public void checkMonthlyStatsTest() {
+        // given
+        addTodaysRecord(7,6,5,4);
+        addRecord(5,4,3,2,2);
+        addRecord(5,4,3,2,5);
+        addRecord(4,3,2,1,10);
+        addRecord(5,3,2,3,12);
+        addRecord(1,2,3,4,15);
+        addRecord(6,4,0,2,17);
+        addRecord(2,3,4,5,20);
+        addRecord(5,4,0,2,22);
+        addRecord(5,5,1,3,25);
+
+        // when
+        DailyRecordStatsDto response = dailyRecordService.getMonthlyStats(GUIDE_THREE);
+
+        // then
+        assertEquals(80, response.getGrainsRec());
+        assertEquals(68, response.getVeggieRec());
+        assertEquals(165, response.getDairyRec());
+        assertEquals(133, response.getProteinRec());
     }
 
     private void addRecord(int grains, int veggie, int dairy, int protein, long daysOffset) {

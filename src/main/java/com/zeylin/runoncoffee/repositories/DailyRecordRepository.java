@@ -6,12 +6,15 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface DailyRecordRepository extends JpaRepository<DailyRecord, UUID> {
 
-    List<DailyRecord> findByDay(LocalDate date);
+//    List<DailyRecord> findByDay(LocalDate date);
+
+    Optional<DailyRecord> findByDay(LocalDate date);
 
     List<DailyRecord> findByDayAfterOrderByDayAsc(LocalDate date);
 
