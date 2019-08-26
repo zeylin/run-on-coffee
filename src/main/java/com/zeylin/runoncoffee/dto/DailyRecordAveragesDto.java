@@ -15,9 +15,9 @@ import lombok.ToString;
 @ToString
 public class DailyRecordAveragesDto {
 
-    private double grainsAverage;
-    private double veggieAverage;
-    private double dairyAverage;
-    private double proteinAverage;
+    private double grains;
+    private double veggie;
+    private double dairy;
+    private double protein;
 
 }
