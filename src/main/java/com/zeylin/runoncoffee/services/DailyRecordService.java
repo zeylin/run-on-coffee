@@ -38,6 +38,7 @@ public class DailyRecordService {
     private static final int SEVEN_DAYS_AGO = 7;
     private static final int MONTH_AGO = 1;
     private static final int MONDAY_INDEX = 1;
+    private static final int FIRST_OF_THE_MONTH = 1;
     private static DecimalFormat twoDecimalPointsFormat = new DecimalFormat("#.##");
     private static DecimalFormat noDecimalPointFormat = new DecimalFormat("#");
 
@@ -136,71 +137,44 @@ public class DailyRecordService {
             case day:
                 return getRecordDataByDate(date);
             case week:
-                return getAverageForWeekOf(date);
+                return getAveragesForWeekOf(date);
             case month:
-                return getLastMonthAverage();
+                return getAveragesForMonthOf(date);
             default:
                 return new DailyRecordAveragesDto();
         }
     }
 
-    private DailyRecordAveragesDto getAverageForWeekOf(LocalDate date) {
-
+    /**
+     * Get average for the week of the given date.
+     * @param date date within the week to get the stats for
+     * @return averages over week
+     */
+    private DailyRecordAveragesDto getAveragesForWeekOf(LocalDate date) {
         if (date.getDayOfWeek().equals(DayOfWeek.MONDAY)) {
-
-            System.out.println("* It's already Monday");
-
             return getAveragesStartingFromDateOverTime(date, SEVEN_DAYS);
         }
 
         // Get beginning of the week (Monday)
         int mondayOffset = date.getDayOfWeek().getValue() - MONDAY_INDEX;
         LocalDate dateOfMonday = date.minusDays(mondayOffset);
-
-        System.out.println("* Monday is: " + dateOfMonday + " offset: " + mondayOffset);
-
         return getAveragesStartingFromDateOverTime(dateOfMonday, SEVEN_DAYS);
-
     }
 
-    // todo fix date to beginning of the month
-//    private DailyRecordAveragesDto getAverageForMonthOf(LocalDate date) {
-//
-//        // get first of the month
-//
-//        date.getDayOfMonth(); // from 1 to 31
-//
-//        if (date.getDayOfMonth() == 1) {
-//            return getAveragesStartingFromDateOverTime(date.minusMonths(MONTH_AGO), THIRTY_DAYS);
-//        }
-//
-//        int offset = date.getDayOfMonth() - 1;
-//        LocalDate monthStart =
-//
-//
-//    }
+    /**
+     * Get average for the month of the given date.
+     * @param date date within the month to get the stats for
+     * @return averages over month
+     */
+    private DailyRecordAveragesDto getAveragesForMonthOf(LocalDate date) {
+        if (date.getDayOfMonth() == 1) { // 1st of the month
+            return getAveragesStartingFromDateOverTime(date, THIRTY_DAYS);
+        }
 
-//    /**
-//     * Get weekly stats for week including the given date.
-//     * @param date date within the week
-//     * @param guideId id of the food guide to follow
-//     * @return stats on nutrition for that time period
-//     */
-//    private DailyRecordStatsDto getStatsForWeekOf(LocalDate date, Long guideId) {
-//        LocalDate weekAgo = date.minusDays(SEVEN_DAYS_AGO);
-//        return getStatsStartingFromForGuide(weekAgo, guideId);
-//    }
-//
-//    /**
-//     * Get monthly stats for month including the given date.
-//     * @param date date within the month
-//     * @param guideId id of the food guide to follow
-//     * @return stats on nutrition for that time period
-//     */
-//    private DailyRecordStatsDto getStatsForMonthOf(LocalDate date, Long guideId) {
-//        LocalDate monthAgo = date.minusMonths(MONTH_AGO);
-//        return getStatsStartingFromForGuide(monthAgo, guideId);
-//    }
+        // Get 1st of the month
+        LocalDate monthStart = LocalDate.of(date.getYear(), date.getMonthValue(), FIRST_OF_THE_MONTH);
+        return getAveragesStartingFromDateOverTime(monthStart, THIRTY_DAYS);
+    }
 
     @Transactional
     public DailyRecordDisplayDto incrementRecord(UUID id, DailyRecordUpdateDto updateDto) {
