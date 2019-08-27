@@ -7,6 +7,7 @@ import com.zeylin.runoncoffee.dto.DailyRecordStatsDto;
 import com.zeylin.runoncoffee.dto.DailyRecordUpdateDto;
 import com.zeylin.runoncoffee.models.DailyRecord;
 import com.zeylin.runoncoffee.services.DailyRecordService;
+import com.zeylin.runoncoffee.services.DailyRecordService.StatsType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,9 +55,20 @@ public class DailyRecordController {
     }
 
     /**
-     * GET BY DATE
+     * GET STATS BY DATE AND TYPE
      */
     @GetMapping(produces = "application/json")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<DailyRecordAveragesDto> getStats(@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @RequestParam("date") LocalDate date,
+                                                           StatsType type) {
+        LOGGER.info("get stats by date, type {}, {} ", date, type);
+        return ResponseEntity.ok(recordService.getStatsByDateAndTime(date, type));
+    }
+
+    /**
+     * GET BY DATE
+     */
+    @GetMapping(value = "/date", produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<DailyRecordDisplayDto> getByDate(@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @RequestParam("date") LocalDate date) {
         LOGGER.info("get daily record with date {} ", date);
@@ -163,7 +175,7 @@ public class DailyRecordController {
     public ResponseEntity<DailyRecordStatsDto> getPercentageStatsDaily(@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @RequestParam("date") LocalDate date,
                                                                        Long guideId) {
         LOGGER.info("get stats for date, guide {}, {}", date, guideId);
-        return ResponseEntity.ok(recordService.getDailyStats(date, guideId));
+        return ResponseEntity.ok(recordService.getDailyStatsByDate(date, guideId));
     }
 
     /**

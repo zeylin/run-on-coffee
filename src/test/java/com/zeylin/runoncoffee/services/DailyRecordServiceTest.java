@@ -78,10 +78,10 @@ public class DailyRecordServiceTest {
         DailyRecordAveragesDto response = dailyRecordService.getLastWeekAverage();
 
         // then
-        assertEquals(0, response.getGrainsAverage(), 0.0001);
-        assertEquals(0, response.getVeggieAverage(), 0.0001);
-        assertEquals(0, response.getDairyAverage(), 0.0001);
-        assertEquals(0, response.getProteinAverage(), 0.0001);
+        assertEquals(0, response.getGrains(), 0.0001);
+        assertEquals(0, response.getVeggie(), 0.0001);
+        assertEquals(0, response.getDairy(), 0.0001);
+        assertEquals(0, response.getProtein(), 0.0001);
     }
 
     @Test
@@ -90,10 +90,10 @@ public class DailyRecordServiceTest {
         DailyRecordAveragesDto response = dailyRecordService.getLastMonthAverage();
 
         // then
-        assertEquals(0, response.getGrainsAverage(), 0.0001);
-        assertEquals(0, response.getVeggieAverage(), 0.0001);
-        assertEquals(0, response.getDairyAverage(), 0.0001);
-        assertEquals(0, response.getProteinAverage(), 0.0001);
+        assertEquals(0, response.getGrains(), 0.0001);
+        assertEquals(0, response.getVeggie(), 0.0001);
+        assertEquals(0, response.getDairy(), 0.0001);
+        assertEquals(0, response.getProtein(), 0.0001);
     }
 
     @Test
@@ -112,10 +112,10 @@ public class DailyRecordServiceTest {
         double expectedDairy = (double) (4 + 3 + 2) / 7;
         double expectedProtein = (double) (3 + 2 + 1) / 7;
 
-        assertEquals(expectedGrains, response.getGrainsAverage(), 0.005); // since rounding to two decimals
-        assertEquals(expectedVeggie, response.getVeggieAverage(), 0.005);
-        assertEquals(expectedDairy, response.getDairyAverage(), 0.005);
-        assertEquals(expectedProtein, response.getProteinAverage(), 0.005);
+        assertEquals(expectedGrains, response.getGrains(), 0.005); // since rounding to two decimals
+        assertEquals(expectedVeggie, response.getVeggie(), 0.005);
+        assertEquals(expectedDairy, response.getDairy(), 0.005);
+        assertEquals(expectedProtein, response.getProtein(), 0.005);
     }
 
     @Test
@@ -141,10 +141,10 @@ public class DailyRecordServiceTest {
         double expectedDairy = (double) (5+3+2+3+4+1+3+2) / 30;
         double expectedProtein = (double) (4+2+1+4+5+3+2+3+2+2) / 30;
 
-        assertEquals(expectedGrains, response.getGrainsAverage(), 0.005); // since rounding to two decimals
-        assertEquals(expectedVeggie, response.getVeggieAverage(), 0.005);
-        assertEquals(expectedDairy, response.getDairyAverage(), 0.005);
-        assertEquals(expectedProtein, response.getProteinAverage(), 0.005);
+        assertEquals(expectedGrains, response.getGrains(), 0.005); // since rounding to two decimals
+        assertEquals(expectedVeggie, response.getVeggie(), 0.005);
+        assertEquals(expectedDairy, response.getDairy(), 0.005);
+        assertEquals(expectedProtein, response.getProtein(), 0.005);
     }
 
     @Test
@@ -154,7 +154,7 @@ public class DailyRecordServiceTest {
         LocalDate today = LocalDate.now();
 
         // when
-        DailyRecordStatsDto response = dailyRecordService.getDailyStats(today, GUIDE_ONE);
+        DailyRecordStatsDto response = dailyRecordService.getDailyStatsByDate(today, GUIDE_ONE);
 
         // then
         assertEquals(86, response.getGrainsRec());

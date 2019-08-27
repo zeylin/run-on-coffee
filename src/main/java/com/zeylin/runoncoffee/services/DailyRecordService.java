@@ -20,6 +20,7 @@ import org.springframework.validation.annotation.Validated;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -36,6 +37,8 @@ public class DailyRecordService {
     private static final int THIRTY_DAYS = 30;
     private static final int SEVEN_DAYS_AGO = 7;
     private static final int MONTH_AGO = 1;
+    private static final int MONDAY_INDEX = 1;
+    private static final int FIRST_OF_THE_MONTH = 1;
     private static DecimalFormat twoDecimalPointsFormat = new DecimalFormat("#.##");
     private static DecimalFormat noDecimalPointFormat = new DecimalFormat("#");
 
@@ -48,6 +51,13 @@ public class DailyRecordService {
         VEGGIE,
         DAIRY,
         PROTEIN
+    }
+
+    /* Type of stats analysis */
+    public enum StatsType {
+        day,
+        week,
+        month
     }
 
     @Autowired
@@ -80,6 +90,13 @@ public class DailyRecordService {
                 .orElseGet(DailyRecordDisplayDto::new);
     }
 
+    private DailyRecordAveragesDto getRecordDataByDate(LocalDate date) {
+        Optional<DailyRecord> record = dailyRecordRepository.findByDay(date);
+        return record
+                .map(t -> convertToAveragesDto(record.get()))
+                .orElseGet(DailyRecordAveragesDto::new);
+    }
+
     private Optional<DailyRecord> getById(UUID id) {
         return dailyRecordRepository.findById(id);
     }
@@ -110,6 +127,53 @@ public class DailyRecordService {
     public void delete(UUID id) {
         Optional<DailyRecord> dbRecord = getById(id);
         dbRecord.ifPresent(record -> dailyRecordRepository.delete(record));
+    }
+
+    /**
+     * Get stats for day, week, or month.
+     */
+    public DailyRecordAveragesDto getStatsByDateAndTime(LocalDate date, StatsType type) {
+        switch(type) {
+            case day:
+                return getRecordDataByDate(date);
+            case week:
+                return getAveragesForWeekOf(date);
+            case month:
+                return getAveragesForMonthOf(date);
+            default:
+                return new DailyRecordAveragesDto();
+        }
+    }
+
+    /**
+     * Get average for the week of the given date.
+     * @param date date within the week to get the stats for
+     * @return averages over week
+     */
+    private DailyRecordAveragesDto getAveragesForWeekOf(LocalDate date) {
+        if (date.getDayOfWeek().equals(DayOfWeek.MONDAY)) {
+            return getAveragesStartingFromDateOverTime(date, SEVEN_DAYS);
+        }
+
+        // Get beginning of the week (Monday)
+        int mondayOffset = date.getDayOfWeek().getValue() - MONDAY_INDEX;
+        LocalDate dateOfMonday = date.minusDays(mondayOffset);
+        return getAveragesStartingFromDateOverTime(dateOfMonday, SEVEN_DAYS);
+    }
+
+    /**
+     * Get average for the month of the given date.
+     * @param date date within the month to get the stats for
+     * @return averages over month
+     */
+    private DailyRecordAveragesDto getAveragesForMonthOf(LocalDate date) {
+        if (date.getDayOfMonth() == 1) { // 1st of the month
+            return getAveragesStartingFromDateOverTime(date, THIRTY_DAYS);
+        }
+
+        // Get 1st of the month
+        LocalDate monthStart = LocalDate.of(date.getYear(), date.getMonthValue(), FIRST_OF_THE_MONTH);
+        return getAveragesStartingFromDateOverTime(monthStart, THIRTY_DAYS);
     }
 
     @Transactional
@@ -194,14 +258,17 @@ public class DailyRecordService {
      * @return averages for each food group
      */
     private DailyRecordAveragesDto getAveragesStartingFromDateOverTime(LocalDate date, int numberOfDays) {
+
+        LOGGER.info("get averages after {} ", date);
+
         List<DailyRecord> records = dailyRecordRepository.findByDayAfterOrderByDayAsc(date);
 
         if (records.isEmpty()) {
             return DailyRecordAveragesDto.builder()
-                    .grainsAverage(0)
-                    .veggieAverage(0)
-                    .dairyAverage(0)
-                    .proteinAverage(0)
+                    .grains(0)
+                    .veggie(0)
+                    .dairy(0)
+                    .protein(0)
                     .build();
         }
 
@@ -221,10 +288,10 @@ public class DailyRecordService {
         double proteinAverage = getAverageForFoodGroupOverTime(records, FoodGroup.PROTEIN, numberOfDays);
 
         return DailyRecordAveragesDto.builder()
-                .grainsAverage(grainsAverage)
-                .veggieAverage(veggieAverage)
-                .dairyAverage(dairyAverage)
-                .proteinAverage(proteinAverage)
+                .grains(grainsAverage)
+                .veggie(veggieAverage)
+                .dairy(dairyAverage)
+                .protein(proteinAverage)
                 .build();
     }
 
@@ -264,7 +331,7 @@ public class DailyRecordService {
      * @param guideId food guide id
      * @return stats on that day, if present
      */
-    public DailyRecordStatsDto getDailyStats(LocalDate date, Long guideId) {
+    public DailyRecordStatsDto getDailyStatsByDate(LocalDate date, Long guideId) {
         Optional<DailyRecord> dbRecord = dailyRecordRepository.findByDay(date);
         if(dbRecord.isPresent()) {
             DailyRecord record = dbRecord.get();
@@ -353,6 +420,10 @@ public class DailyRecordService {
 
     private DailyRecordDisplayDto convertToDisplayDto(DailyRecord record) {
         return modelMapper.map(record, DailyRecordDisplayDto.class);
+    }
+
+    private DailyRecordAveragesDto convertToAveragesDto(DailyRecord record) {
+        return modelMapper.map(record, DailyRecordAveragesDto.class);
     }
 
 }
