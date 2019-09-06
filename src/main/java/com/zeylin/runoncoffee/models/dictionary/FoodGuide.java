@@ -17,7 +17,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "FOOD_GUIDE", schema = "dictionary")
+@Table(schema = "dictionary")
 @Getter
 @Setter
 @Builder
