@@ -4,6 +4,7 @@ import com.zeylin.runoncoffee.models.dictionary.base.BaseFoodItem;
 import com.zeylin.runoncoffee.repositories.dictionary.base.BaseFoodItemRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Base service for food item dictionaries.
@@ -18,6 +19,10 @@ public class BaseFoodItemService<E extends BaseFoodItem> {
 
     public List<E> getAll() {
         return baseRepository.findAll();
+    }
+
+    public Optional<E> getById(Long id) {
+        return baseRepository.findById(id);
     }
 
 }

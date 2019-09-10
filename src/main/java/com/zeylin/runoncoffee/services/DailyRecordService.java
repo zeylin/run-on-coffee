@@ -1,5 +1,6 @@
 package com.zeylin.runoncoffee.services;
 
+import com.zeylin.runoncoffee.dto.AddFoodItemDto;
 import com.zeylin.runoncoffee.dto.dailyrecord.DailyRecordAveragesDto;
 import com.zeylin.runoncoffee.dto.dailyrecord.DailyRecordDisplayDto;
 import com.zeylin.runoncoffee.dto.dailyrecord.DailyRecordSaveDto;
@@ -7,9 +8,9 @@ import com.zeylin.runoncoffee.dto.dailyrecord.DailyRecordStatsDto;
 import com.zeylin.runoncoffee.dto.dailyrecord.DailyRecordUpdateDto;
 import com.zeylin.runoncoffee.exceptions.NotFoundException;
 import com.zeylin.runoncoffee.models.DailyRecord;
-import com.zeylin.runoncoffee.models.dictionary.FoodGuide;
+import com.zeylin.runoncoffee.models.dictionary.*;
 import com.zeylin.runoncoffee.repositories.DailyRecordRepository;
-import com.zeylin.runoncoffee.services.dictionary.FoodGuideService;
+import com.zeylin.runoncoffee.services.dictionary.*;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +46,10 @@ public class DailyRecordService {
     private DailyRecordRepository dailyRecordRepository;
     private FoodGuideService foodGuideService;
     private ModelMapper modelMapper;
+    private GrainsService grainsService;
+    private DairyService dairyService;
+    private ProteinService proteinService;
+    private PlantService plantService;
 
     public enum FoodGroup {
         GRAINS,
@@ -63,10 +68,19 @@ public class DailyRecordService {
     @Autowired
     public DailyRecordService(DailyRecordRepository dailyRecordRepository,
                               FoodGuideService foodGuideService,
-                              ModelMapper modelMapper) {
+                              ModelMapper modelMapper,
+                              GrainsService grainsService,
+                              DairyService dairyService,
+                              ProteinService proteinService,
+                              PlantService plantService
+    ) {
         this.dailyRecordRepository = dailyRecordRepository;
         this.foodGuideService = foodGuideService;
         this.modelMapper = modelMapper;
+        this.grainsService = grainsService;
+        this.dairyService = dairyService;
+        this.proteinService = proteinService;
+        this.plantService = plantService;
     }
 
     public List<DailyRecordDisplayDto> getAllRecords() {
@@ -412,6 +426,60 @@ public class DailyRecordService {
                 .dairyRec(Integer.valueOf(noDecimalPointFormat.format(dairyPercent)))
                 .proteinRec(Integer.valueOf(noDecimalPointFormat.format(proteinPercent)))
                 .build();
+    }
+
+    @Transactional
+    public DailyRecord addFoodItem(AddFoodItemDto foodItemDto, LocalDate date) {
+
+        // get FoodItem from dictionary
+
+        Double ratio = 0.0;
+
+        switch(foodItemDto.getFoodGroup()) {
+            case GRAINS:
+                Optional<Grains> grains = grainsService.getById(foodItemDto.getId());
+                if(grains.isPresent()) {
+                    ratio = grains.get().getConversionRatio();
+                }
+                break;
+            case VEGGIE:
+                Optional<Plant> plant = plantService.getById(foodItemDto.getId());
+                if(plant.isPresent()) {
+                    ratio = plant.get().getConversionRatio();
+                }
+                break;
+            case DAIRY:
+                Optional<Dairy> dairy = dairyService.getById(foodItemDto.getId());
+                if(dairy.isPresent()) {
+                    ratio = dairy.get().getConversionRatio();
+                }
+                break;
+            case PROTEIN:
+                Optional<Protein> protein = proteinService.getById(foodItemDto.getId());
+                if(protein.isPresent()) {
+                    ratio = protein.get().getConversionRatio();
+                }
+                break;
+            default:
+                    break;
+        }
+
+        if(ratio != 0) {
+            double amount = foodItemDto.getQuantity() * ratio;
+
+            Optional<DailyRecord> record = dailyRecordRepository.findByDay(date);
+            if(record.isPresent()) {
+
+                // todo change DailyRecord to doubles?
+            }
+
+        }
+
+        // get conversion ratio from the dictionary by id
+        // multiply the input quantity by the ratio
+        // record (add to?) daily record
+        // return updated daily record
+
     }
 
     private DailyRecord convertToDailyRecord(DailyRecordSaveDto recordDto) {

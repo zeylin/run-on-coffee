@@ -1,5 +1,6 @@
 package com.zeylin.runoncoffee.controllers;
 
+import com.zeylin.runoncoffee.dto.AddFoodItemDto;
 import com.zeylin.runoncoffee.dto.dailyrecord.DailyRecordAveragesDto;
 import com.zeylin.runoncoffee.dto.dailyrecord.DailyRecordDisplayDto;
 import com.zeylin.runoncoffee.dto.dailyrecord.DailyRecordSaveDto;
@@ -196,6 +197,18 @@ public class DailyRecordController {
     public ResponseEntity<DailyRecordStatsDto> getPercentageStatsMonthly(Long guideId) {
         LOGGER.info("get stats for last month with guide id {}", guideId);
         return ResponseEntity.ok(recordService.getMonthlyStats(guideId));
+    }
+
+    /**
+     * Add food item to daily record.
+     */
+    @PostMapping(produces = "application/json")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<DailyRecord> addFoodItem(@RequestBody AddFoodItemDto addFoodItemDto,
+                                                   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @RequestParam("date") LocalDate date
+                                                   ) {
+        LOGGER.info("add food item {} ", addFoodItemDto);
+        return ResponseEntity.ok(recordService.addFoodItem(addFoodItemDto, date));
     }
 
 }
