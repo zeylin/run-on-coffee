@@ -1,10 +1,10 @@
 package com.zeylin.runoncoffee.services;
 
-import com.zeylin.runoncoffee.dto.DailyRecordAveragesDto;
-import com.zeylin.runoncoffee.dto.DailyRecordDisplayDto;
-import com.zeylin.runoncoffee.dto.DailyRecordSaveDto;
-import com.zeylin.runoncoffee.dto.DailyRecordStatsDto;
-import com.zeylin.runoncoffee.dto.DailyRecordUpdateDto;
+import com.zeylin.runoncoffee.dto.dailyrecord.DailyRecordAveragesDto;
+import com.zeylin.runoncoffee.dto.dailyrecord.DailyRecordDisplayDto;
+import com.zeylin.runoncoffee.dto.dailyrecord.DailyRecordSaveDto;
+import com.zeylin.runoncoffee.dto.dailyrecord.DailyRecordStatsDto;
+import com.zeylin.runoncoffee.dto.dailyrecord.DailyRecordUpdateDto;
 import com.zeylin.runoncoffee.exceptions.NotFoundException;
 import com.zeylin.runoncoffee.models.DailyRecord;
 import com.zeylin.runoncoffee.models.dictionary.FoodGuide;
@@ -132,7 +132,7 @@ public class DailyRecordService {
     /**
      * Get stats for day, week, or month.
      */
-    public DailyRecordAveragesDto getStatsByDateAndTime(LocalDate date, StatsType type) {
+    public DailyRecordAveragesDto getStatsByDateAndType(LocalDate date, StatsType type) {
         switch(type) {
             case day:
                 return getRecordDataByDate(date);

@@ -9,6 +9,9 @@ import lombok.ToString;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
+/**
+ * Plant food items dictionary.
+ */
 @Entity
 @Table(schema = "dictionary")
 @Getter

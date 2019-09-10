@@ -1,10 +1,10 @@
 package com.zeylin.runoncoffee.controllers;
 
-import com.zeylin.runoncoffee.dto.DailyRecordAveragesDto;
-import com.zeylin.runoncoffee.dto.DailyRecordDisplayDto;
-import com.zeylin.runoncoffee.dto.DailyRecordSaveDto;
-import com.zeylin.runoncoffee.dto.DailyRecordStatsDto;
-import com.zeylin.runoncoffee.dto.DailyRecordUpdateDto;
+import com.zeylin.runoncoffee.dto.dailyrecord.DailyRecordAveragesDto;
+import com.zeylin.runoncoffee.dto.dailyrecord.DailyRecordDisplayDto;
+import com.zeylin.runoncoffee.dto.dailyrecord.DailyRecordSaveDto;
+import com.zeylin.runoncoffee.dto.dailyrecord.DailyRecordStatsDto;
+import com.zeylin.runoncoffee.dto.dailyrecord.DailyRecordUpdateDto;
 import com.zeylin.runoncoffee.models.DailyRecord;
 import com.zeylin.runoncoffee.services.DailyRecordService;
 import com.zeylin.runoncoffee.services.DailyRecordService.StatsType;
@@ -62,7 +62,7 @@ public class DailyRecordController {
     public ResponseEntity<DailyRecordAveragesDto> getStats(@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @RequestParam("date") LocalDate date,
                                                            StatsType type) {
         LOGGER.info("get stats by date, type {}, {} ", date, type);
-        return ResponseEntity.ok(recordService.getStatsByDateAndTime(date, type));
+        return ResponseEntity.ok(recordService.getStatsByDateAndType(date, type));
     }
 
     /**

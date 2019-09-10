@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Food guides dictionaries.
+ */
 @RestController
 @RequestMapping("/dictionary/guide")
 public class FoodGuideController {

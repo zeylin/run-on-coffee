@@ -1,4 +1,4 @@
-package com.zeylin.runoncoffee.dto;
+package com.zeylin.runoncoffee.dto.dailyrecord;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

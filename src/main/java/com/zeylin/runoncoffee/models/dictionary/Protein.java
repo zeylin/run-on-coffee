@@ -10,6 +10,9 @@ import lombok.ToString;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
+/**
+ * Protein food items dictionary.
+ */
 @Entity
 @Table(schema = "dictionary")
 @Getter
